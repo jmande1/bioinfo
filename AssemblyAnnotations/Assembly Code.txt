@@ -1,0 +1,13 @@
+# Abyss on paired end (pe) reads, name=salmonella, Kamer 96 base pair on salmonella genome  
+abyss-pe name=salmonella k=96 B=2G in='R1.fastq.gz R2.fastq.gz'
+
+# directory to hardrive 
+cd /mnt/d/
+-> (genomeanalysis) root@NelleLikesCupcakes:/mnt/d# 
+ls
+
+# download prokka
+mamba install -c conda-forge -c bioconda -c defaults prokka
+
+# run prokka - output directory
+prokka -outdir prokkaannotation --prefix salmonella AbyssOutput/salmonella-8.fa
