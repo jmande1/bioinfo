@@ -1,0 +1,74 @@
+mamba activate qiime2-amplicon-2024.2
+
+# import my files into qiime2 and create the artefact 
+qiime tools import \
+  --type EMPSingleEndSequences \
+  --input-path emp-single-end-sequences \
+  --output-path emp-single-end-sequences.qza
+
+# d multiplex sequencing read
+qiime demux emp-single \
+  --i-seqs emp-single-end-sequences.qza \
+  --m-barcodes-file sample-metadata.tsv \
+  --m-barcodes-column barcode-sequence \
+  --o-per-sample-sequences demux.qza \
+  --o-error-correction-details demux-details.qza
+
+# generate a summary of the demultiplexing results
+qiime demux summarize \
+  --i-data demux.qza \
+  --o-visualization demux.qzv
+
+# drag and drop file if want visualization
+https://view.qiime2.org
+
+#code for visualization
+qiime tools view <file name>
+
+# quality control of reads based on histogram. Trim 0 left and 120 right Option 1 DADA2
+qiime dada2 denoise-single \
+  --i-demultiplexed-seqs demux.qza \
+  --p-trim-left 0 \
+  --p-trunc-len 120 \
+  --o-representative-sequences rep-seqs-dada2.qza \
+  --o-table table-dada2.qza \
+  --o-denoising-stats stats-dada2.qza
+
+# recieve a table output of the dada data
+mv rep-seqs-dada2.qza rep-seqs.qza
+mv table-dada2.qza table.qza
+
+# rename files
+mv rep-seqs-dada2.qrz rep-seqs.qza
+mv table-dada2.qza table.qra
+mv stats-dada2.gra stats.qza
+mv stats-dada2.gzv stats.gzv
+
+# If you’d like to continue the tutorial using this FeatureTable (opposed to the Deblur feature table generated in Option 2), run the following commands.
+mv rep-seqs-dada2.qza rep-seqs.qza
+mv table-dada2.qza table.qza
+
+# creating visualizations for the Table and Sequences
+qiime feature-table summarize \
+  --i-table table.qza \
+  --o-visualization table.qzv \
+  --m-sample-metadata-file sample-metadata.tsv
+qiime feature-table tabulate-seqs \
+  --i-data rep-seqs.qza \
+  --o-visualization rep-seqs.qzv
+
+# Generate a tree for phylogenetic diversity analyses
+qiime phylogeny align-to-tree-mafft-fasttree \
+  --i-sequences rep-seqs.qza \
+  --o-alignment aligned-rep-seqs.qza \
+  --o-masked-alignment masked-aligned-rep-seqs.qza \
+  --o-tree unrooted-tree.qza \
+  --o-rooted-tree rooted-tree.qza
+
+# generate alpha/beta diversity numbers using a sampling of 1103
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny rooted-tree.qza \
+  --i-table table.qza \
+  --p-sampling-depth 1103 \
+  --m-metadata-file sample-metadata.tsv \
+  --output-dir core-metrics-results
