@@ -72,3 +72,99 @@ qiime diversity core-metrics-phylogenetic \
   --p-sampling-depth 1103 \
   --m-metadata-file sample-metadata.tsv \
   --output-dir core-metrics-results
+
+# Alpha diversity - How many species are in the community and are they evenly distrubted? 
+
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-results/faith_pd_vector.qza \
+  --m-metadata-file sample-metadata.tsv \
+  --o-visualization core-metrics-results/faith-pd-group-significance.qzv
+
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-results/evenness_vector.qza \
+  --m-metadata-file sample-metadata.tsv \
+  --o-visualization core-metrics-results/evenness-group-significance.qzv
+
+# Beta diversity - are the species considered significantly the same or different? 
+
+qiime diversity beta-group-significance \
+  --i-distance-matrix core-metrics-results/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file sample-metadata.tsv \
+  --m-metadata-column body-site \
+  --o-visualization core-metrics-results/unweighted-unifrac-body-site-significance.qzv \
+  --p-pairwise
+
+qiime diversity beta-group-significance \
+  --i-distance-matrix core-metrics-results/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file sample-metadata.tsv \
+  --m-metadata-column subject \
+  --o-visualization core-metrics-results/unweighted-unifrac-subject-group-significance.qzv \
+  --p-pairwise
+
+# taxonomic analysis - what species are actually part of the sample; comparison of the sequences that we have + the database we're generating
+
+wget \
+  -O "gg-13-8-99-515-806-nb-classifier.qza" \
+  "https://data.qiime2.org/2024.2/common/gg-13-8-99-515-806-nb-classifier.qza"
+
+# ref-seq artifacts and compares our sequences with the database
+
+qiime feature-classifier classify-sklearn \
+  --i-classifier gg-13-8-99-515-806-nb-classifier.qza \
+  --i-reads rep-seqs.qza \
+  --o-classification taxonomy.qza
+
+qiime metadata tabulate \
+  --m-input-file taxonomy.qza \
+  --o-visualization taxonomy.qzv
+
+# create taxonomy barplot
+
+qiime taxa barplot \
+  --i-table table.qza \
+  --i-taxonomy taxonomy.qza \
+  --m-metadata-file sample-metadata.tsv \
+  --o-visualization taxa-bar-plots.qzv
+
+# are there species that are differentially abundant depending on what we're interested in? (i.e. are there specific specimen only in the gut?)
+
+qiime feature-table filter-samples \
+  --i-table table.qza \
+  --m-metadata-file sample-metadata.tsv \
+  --p-where "[body-site]='gut'" \
+  --o-filtered-table gut-table.qza
+
+# Differential abundance - are there different species in person 1 versus person 2?
+
+qiime composition ancombc \
+  --i-table gut-table.qza \
+  --m-metadata-file sample-metadata.tsv \
+  --p-formula 'subject' \
+  --o-differentials ancombc-subject.qza
+
+# Differential abundance - is there statistical significant difference between the species in person 1 versus person 2? 
+
+qiime composition da-barplot \
+  --i-data ancombc-subject.qza \
+  --p-significance-threshold 0.001 \
+  --o-visualization da-barplot-subject.qzv
+
+# collapse from a taxonomic level to a genus level
+
+qiime taxa collapse \
+  --i-table gut-table.qza \
+  --i-taxonomy taxonomy.qza \
+  --p-level 6 \
+  --o-collapsed-table gut-table-l6.qza
+
+qiime composition ancombc \
+  --i-table gut-table-l6.qza \
+  --m-metadata-file sample-metadata.tsv \
+  --p-formula 'subject' \
+  --o-differentials l6-ancombc-subject.qza
+
+qiime composition da-barplot \
+  --i-data l6-ancombc-subject.qza \
+  --p-significance-threshold 0.001 \
+  --p-level-delimiter ';' \
+  --o-visualization l6-da-barplot-subject.qzv
