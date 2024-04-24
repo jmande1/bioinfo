@@ -1,13 +1,9 @@
----
-title: "Microbiome DADA2"
-author: "Janelle"
-date: "2024-04-16"
-output: pdf_document
----
+R Studio Codes
+
 # Load required packages
 ```{r}
 library(dada2)
-```
+``` 
 
 # Load sequences
 ```{r}
@@ -90,13 +86,18 @@ load("RData/seqtab.nochim,RData")
 # Assign Taxonomy
 ```{r}
 # download the Silva species database from https://zenodo.org/records/4587955
-taxa <- assignTaxonomy(seqtab.nochim, "silva_nr99_v138.1_wSpecies_train_set.fa.gz")
+taxa <- assignTaxonomy(seqtab.nochim,
+"silva_nr99_v138.1_wSpecies_train_set.fa.gz")
 ```
 
 # save taxonomy
 ```{r}
 save(taxa, file = "RData/taxa.RData")
 ```
+
+
+
+
 
 
 

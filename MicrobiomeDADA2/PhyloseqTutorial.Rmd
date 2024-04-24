@@ -1,0 +1,161 @@
+---
+title: "Phyloseq"
+author: "Janelle"
+date: "2024-04-18"
+output: pdf_document
+---
+# to intsall phyloseq packages
+```{r}
+source('http://bioconductor.org/biocLite.R')
+biocLite('phyloseq')
+```
+
+# load required packages
+```{r}
+library(phyloseq)
+library(dplyr) # alternative installation of the %>%
+library(BiMiCo)
+```
+
+# Load taxa and seqtab.nochim
+```{r}
+load("RData/taxa.RData")
+load("RData/seqtab.nochim.RData")
+```
+
+# import metadata
+```{r}
+metadata<-read.csv("metadata.csv", header=TRUE, row.names=1)
+```
+
+# create phyloseq object
+```{r}
+#make sure the seqtab.nochim and taxa objects are loaded
+physeq <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows=FALSE),
+                   sample_data(metadata),
+                   tax_table(taxa))
+physeq
+```
+
+# transform sample counts
+```{r}
+# converts from raw to abundance
+physeq <- transform_sample_counts(physeq, function(abund) 1*(abund>0))
+physeq
+```
+
+# Remove the sequence itself and replace with ASV
+```{r}
+dna <- Biostrings::DNAStringsSet(taxa_names(physeq))
+names(dna) <- taxa_names(physeq)
+physeq <- merge_phyloseq(physeq,dna)
+taxa_names(physeq) <- paste0("ASV", seq(ntaxa(physeq)))
+physeq
+```
+
+# remove mitochondria and chloroplast matches. remove all non bacterial sequences
+```{r}
+physeq <- physeq %>% subset_taxa(Family!= "Mitochondria" | is.na(Family) & Order!="Chloroplast" | is.na(Order))
+physeq
+```
+
+# save physeq objects to load later
+```{r}
+save(physeq, file="RData/physeq.RData")
+```
+
+# load physeq objects start here
+```{r}
+load("RData/physeq.RData")
+```
+
+# plot bar graph based on phylum
+```{r}
+plot_bar(physeq, fill = "Phylum") + geom_bar(aes(color=Phylum, fill=phylum), stat="identity", position="fill")
+```
+
+# in console
+library(ggplot2)
+
+#install package ggplot2 in console (add to top w/ other libraries)
+install.packages("ggplot2")
+
+# create a barplot of relative abundance
+```{r}
+#convert to relative abundance
+physeq_relabund <- transform_sample_counts(physeq, function(x) x / sume(x))
+
+# barplot
+plot_bar(physeq_relabund, fill = "Phylum") + geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="fill") + facet_wrap(~body.sit, scales = "free")
+```
+# Bar plots of Abundance per individual samples by body sit (Phylum-Merge <5%)
+
+# plot alpha diversity based on body.site
+```{r}
+plot_richness(physeq, x="body.site", color= "subject", measures=c("Observed","Simpson", "Shannon"))
+```
+
+# plot alpha diversity based on reported.antibiotic.usage
+```{r}
+plot_richness(physeq, x="reported.antibiotic.usage", color= "body.site", measures=c("Observed","Simpson", "Shannon"))
+```
+
+# plot alpha diversity based on subject 
+```{r}
+plot_richness(physeq, x="subject", color= "body.site", measures=c("Observed","Simpson", "Shannon"))
+```
+
+# test for normality - pulls out sample and calculates its richness
+```{r}
+alpha <- estimate_richness(physeq, measures=c("Observed","Simpson", "Shannon"))
+
+# shapiro-wilk
+observed <- shapiro.test(alpha$Observed)
+shannon <- shapiro.test(alpha$Shannon)
+simpson <- shapiro.test(alpha$Simpson)
+
+#print
+print(observed)
+print(shannon)
+print(simpson)
+```
+
+# create data frames for statistical analyses 
+```{r}
+# extract sample information from the physeq object; pulls out all the sample information (i.e. names)
+samples <- sample_data(physeq)
+
+# If samples is a phyloseq sample_data object, convert it to a data frame
+if (class(samples) == "sample_data") {
+samples <- data.frame(sample_data(samples))
+}
+
+# add a column to alpha with sample names
+alpha$samples <- rownames(alpha)
+
+# merge alpha diversity data and sample data
+alpha <- merge(alpha, samples, by = "sample")
+```
+
+# perform stats based on subject
+```{r}
+# perform t/wilcox tests for each biodiversity index
+test_observed <- wilcox.test(Observed ~ subject, data = alpha)
+test simpson <- wilcox.text(Simpson ~ subject, data = alpha)
+test shannon <- wilcox.text(Shannon ~ subject, data = alpha)
+
+# printing the results
+print(test_observed)
+print(test_simpson)
+print(test_shannon)
+```
+
+
+
+
+
+
+
+
+
+
