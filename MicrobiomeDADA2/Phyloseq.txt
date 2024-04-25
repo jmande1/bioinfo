@@ -22,7 +22,7 @@ library(phyloseq)
 # Load taxa and seqtab.nochim
 ```{r}
 load("RData/taxa.RData")
-load("RData/seqtab.nochim.RData")
+load("RData/seqtab.nochim,RData")
 ```
 
 # on metadata file
@@ -34,7 +34,7 @@ title the 2nd column "sample"
 
 # import metadata
 ```{r}
-metadata<-read.csv("metadata.csv", header=TRUE, row.names=1)
+metadata<-read.csv("sample-metadata.csv", header=TRUE, row.names=1)
 ```
 
 # create phyloseq object
@@ -54,7 +54,7 @@ physeq
 
 # Remove the sequence itself and replace with ASV
 ```{r}
-dna <- Biostrings::DNAStringsSet(taxa_names(physeq))
+dna <- Biostrings::DNAStringSet(taxa_names(physeq))
 names(dna) <- taxa_names(physeq)
 physeq <- merge_phyloseq(physeq,dna)
 taxa_names(physeq) <- paste0("ASV", seq(ntaxa(physeq)))

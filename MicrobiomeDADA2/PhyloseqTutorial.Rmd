@@ -10,22 +10,33 @@ source('http://bioconductor.org/biocLite.R')
 biocLite('phyloseq')
 ```
 
+```{r}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("phyloseq")
+```
+
 # load required packages
 ```{r}
 library(phyloseq)
 library(dplyr) # alternative installation of the %>%
 library(BiMiCo)
+library(ggplot2)
+library(devtools)
+library(vegan)
+library(MicEco)
 ```
 
 # Load taxa and seqtab.nochim
 ```{r}
 load("RData/taxa.RData")
-load("RData/seqtab.nochim.RData")
+load("RData/seqtab.nochim,RData")
 ```
 
 # import metadata
 ```{r}
-metadata<-read.csv("metadata.csv", header=TRUE, row.names=1)
+metadata<-read.csv("sample-metadata.csv", header=TRUE, row.names=1)
 ```
 
 # create phyloseq object
@@ -43,10 +54,9 @@ physeq
 physeq <- transform_sample_counts(physeq, function(abund) 1*(abund>0))
 physeq
 ```
-
 # Remove the sequence itself and replace with ASV
 ```{r}
-dna <- Biostrings::DNAStringsSet(taxa_names(physeq))
+dna <- Biostrings::DNAStringSet(taxa_names(physeq))
 names(dna) <- taxa_names(physeq)
 physeq <- merge_phyloseq(physeq,dna)
 taxa_names(physeq) <- paste0("ASV", seq(ntaxa(physeq)))
@@ -71,7 +81,7 @@ load("RData/physeq.RData")
 
 # plot bar graph based on phylum
 ```{r}
-plot_bar(physeq, fill = "Phylum") + geom_bar(aes(color=Phylum, fill=phylum), stat="identity", position="fill")
+plot_bar(physeq, fill = "Phylum") + geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="fill")
 ```
 
 # in console
@@ -83,10 +93,10 @@ install.packages("ggplot2")
 # create a barplot of relative abundance
 ```{r}
 #convert to relative abundance
-physeq_relabund <- transform_sample_counts(physeq, function(x) x / sume(x))
+physeq_relabund <- transform_sample_counts(physeq, function(x) x / sum(x))
 
 # barplot
-plot_bar(physeq_relabund, fill = "Phylum") + geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="fill") + facet_wrap(~body.sit, scales = "free")
+plot_bar(physeq_relabund, fill = "Phylum") + geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="fill") + facet_wrap(~body.site, scales = "free")
 ```
 # Bar plots of Abundance per individual samples by body sit (Phylum-Merge <5%)
 
@@ -131,7 +141,7 @@ samples <- data.frame(sample_data(samples))
 }
 
 # add a column to alpha with sample names
-alpha$samples <- rownames(alpha)
+alpha$sample <- rownames(alpha)
 
 # merge alpha diversity data and sample data
 alpha <- merge(alpha, samples, by = "sample")
@@ -141,8 +151,20 @@ alpha <- merge(alpha, samples, by = "sample")
 ```{r}
 # perform t/wilcox tests for each biodiversity index
 test_observed <- wilcox.test(Observed ~ subject, data = alpha)
-test simpson <- wilcox.text(Simpson ~ subject, data = alpha)
-test shannon <- wilcox.text(Shannon ~ subject, data = alpha)
+test_simpson <- wilcox.test(Simpson ~ subject, data = alpha)
+test_shannon <- wilcox.test(Shannon ~ subject, data = alpha)
+
+# printing the results
+print(test_observed)
+print(test_simpson)
+print(test_shannon)
+```
+# perform stats based on reported.antibiotic.usage
+```{r}
+# perform t/wilcox tests for each biodiversity index
+test_observed <- wilcox.test(Observed ~ reported.antibiotic.usage, data = alpha)
+test_simpson <- wilcox.test(Simpson ~ reported.antibiotic.usage, data = alpha)
+test_shannon <- wilcox.test(Shannon ~ reported.antibiotic.usage, data = alpha)
 
 # printing the results
 print(test_observed)
@@ -150,11 +172,77 @@ print(test_simpson)
 print(test_shannon)
 ```
 
+# perform stats based on body.site
+```{r}
+kruskal.test(Simpson ~ body.site, data=alpha)
+pairwise.wilcox.test(alpha$Simpson, alpha$body.site, p.adjust.method="holm")
+kruskal.test(Observed ~ body.site, data=alpha)
+pairwise.wilcox.test(alpha$Observed, alpha$body.site, p.adjust.method="holm")
+shannonanova <- aov(Shannon ~ body.site, data=alpha)
+summary(shannonanova)
+TukeyHSD(shannonanova)
+```
 
+# Remove taxa with relative abundance <0.005%
+```{r}
+minTotRelAbun = .00005
+x = taxa_sums(physeq)
+keepTaxa = (x / sum(x)) > minTotRelAbun
+physeqprune = prune_taxa(keepTaxa, physeq)
+physeqprune
+```
+# Number of shared ASVs body.site (found in 25% or more)
+```{r}
+bodysite=ps_venn(
+  physeqprune,
+  "body.site",
+  fraction = 0.25,  
+  weight = FALSE,
+  relative = TRUE,
+  plot = TRUE
+)
+bodysite
+```
+# Bray Curtis Calculation
+```{r message=FALSE}
+set.seed(777) # calculate differences, to make calculations more 
+dist = phyloseq::distance(physeqprune, method="bray", weighted=TRUE)
+ordination = ordinate(physeqprune, method="NMDS", distance=dist)
+```
 
+# Bray Curtis Subject Plot
+```{r}
+braysubject=plot_ordination(physeqprune, ordination, color="subject") +
+theme_classic() +
+theme(strip.background = element_blank()) + stat_ellipse(aes(group=subject))
+braysubject
+```
+# Bray Curtis Body Site Plot
+```{r}
+braybodysite=plot_ordination(physeqprune, ordination, color="body.site") +
+theme_classic() +
+theme(strip.background = element_blank()) + stat_ellipse(aes(group=body.site))
+braybodysite
+```
 
-
-
+```{r}
+brayreportedantibioticusage=plot_ordination(physeqprune, ordination, color="reported.antibiotic.usage") +
+theme_classic() +
+theme(strip.background = element_blank()) + stat_ellipse(aes(group=reported.antibiotic.usage))
+brayreportedantibioticusage
+```
+# Bray Curtis Subject Statistics 
+```{r}
+adonis2(dist ~ sample_data(physeqprune)$subject)
+```
+# Bray Curtis Body Site Statistics 
+```{r}
+adonis2(dist ~ sample_data(physeqprune)$body.site)
+```
+# Bray CurtisReported Antibiotic Resistance Statistics 
+```{r}
+adonis2(dist ~ sample_data(physeqprune)$reported.antibiotic.usage)
+```
 
 
 
