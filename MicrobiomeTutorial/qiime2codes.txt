@@ -1,3 +1,5 @@
+Go to your designated folder
+
 mamba activate qiime2-amplicon-2024.2
 
 # import my files into qiime2 and create the artefact 
@@ -168,3 +170,5 @@ qiime composition da-barplot \
   --p-significance-threshold 0.001 \
   --p-level-delimiter ';' \
   --o-visualization l6-da-barplot-subject.qzv
+
+qiime dada2 denoise-paired --i-demultiplexed-seqs demux.qza --p-trim-left-f 15 --p-trunc-len-f 150 --p-trim-left-r 0 --p-trunc-len-r 120 --o-representative-sequences rep-seqs.qza --o-table table.qza --o-denoising-stats stats.qza

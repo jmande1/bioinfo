@@ -1,0 +1,37 @@
+# Abyss on paired end (pe) reads, name=salmonella, Kamer 96 base pair on salmonella genome  
+abyss-pe name=salmonella k=96 B=2G in='R1.fastq.gz R2.fastq.gz'
+
+# directory to hardrive 
+cd /mnt/d/Bioinformatics
+-> (genomeanalysis) root@NelleLikesCupcakes:/mnt/d# 
+ls
+
+# download abyss 
+mamba install -c bioconda -c conda-forge abyss
+
+# download prokka
+mamba install -c conda-forge -c bioconda -c defaults prokka
+
+# run prokka - output directory
+prokka -outdir prokkaannotation --prefix <microbe> AbyssOutput/microbe-8.fa
+
+# prokka citations
+prokka --citation
+
+# to update git after adding 
+git push
+
+# to push files into github
+
+git pull origin
+
+git pull origin main
+
+git add .
+
+git commit -m "progress uploads"
+
+git push origin main
+
+
+
