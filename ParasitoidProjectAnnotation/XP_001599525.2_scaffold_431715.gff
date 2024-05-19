@@ -1,0 +1,15 @@
+track name="CustomModel" description="Custom Gene Model for ganSpe1" color=200,0,0 visibility=3 group="map" priority=10
+scaffold_431715	GEP	CDS	19521	19534	.	+	0	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
+scaffold_431715	GEP	CDS	66869	66931	.	+	1	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
+scaffold_431715	GEP	CDS	67147	67292	.	+	1	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
+scaffold_431715	GEP	CDS	67418	67541	.	+	2	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
+scaffold_431715	GEP	CDS	67693	68001	.	+	1	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
+scaffold_431715	GEP	CDS	68228	68390	.	+	1	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
+scaffold_431715	GEP	CDS	68679	69135	.	+	0	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
+scaffold_431715	GEP	CDS	69493	69789	.	+	2	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
+scaffold_431715	GEP	CDS	70042	70229	.	+	2	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
+scaffold_431715	GEP	CDS	70310	70450	.	+	0	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
+scaffold_431715	GEP	CDS	70659	70742	.	+	0	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
+scaffold_431715	GEP	stop_codon	70743	70745	.	+	.	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
+scaffold_431715	GEP	exon	19521	19534	.	+	.	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
+scaffold_431715	GEP	exon	70659	70745	.	+	.	gene_id "ganSpe1_XP_001599525.2"; transcript_id "ganSpe1_XP_001599525.2";
