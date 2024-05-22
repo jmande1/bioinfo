@@ -1,0 +1,3 @@
+# run prokka - output directory name of file ‘prokkaanotation’ –-look for prefix ‘MEGAHIT’ in the folder MEGAHIToutput, the name of the file is MEGAHIToutput.fasta
+
+prokka -outdir prokkaannotation --prefix MEGAHIT MEGAHIToutput/MEGAHIToutput.fasta
